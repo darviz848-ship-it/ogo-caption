@@ -1,0 +1,14 @@
+# Faqat o'lchov stendi uchun (plagin runtime'iga QO'SHILMAYDI).
+# Versiyalar Win runtime bilan bir xil: faster-whisper 1.2.1, ctranslate2 4.8.1, tokenizers 0.23.1.
+faster-whisper==1.2.1
+ctranslate2==4.8.1
+tokenizers==0.23.1
+# av 19+ faster-whisper 1.2.1 ni buzadi: av.open(..., metadata_errors=) olib tashlangan (28.10.2026 da tekshirildi)
+av>=11,<19
+onnxruntime        # VAD (silero) uchun
+numpy
+rapidfuzz          # tez Levenshtein (bo'lmasa sof Python - sekinroq, natija bir xil)
+huggingface_hub    # FLEURS va modellarni yuklash
+# Faqat convert_model.py (HF -> CTranslate2) uchun:
+transformers
+torch
