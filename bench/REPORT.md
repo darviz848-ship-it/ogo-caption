@@ -174,6 +174,10 @@ Stend kodi tasodifiy model bilan oxirigacha sinaldi (qisqa, uzun, VAD, beam, pos
 
 ---
 
+## Kompyuterga o'rnatish (yangilash paketi)
+
+`python3 tools/build_update_win.py --out <papka> --zip` — Windows uchun kichik paket yig'adi: `OgoCaption-Yangilash-<sana>.zip` (~21 KB). Ichida faqat o'zgargan 3 fayl (panel `index.html`, `js/main.js`, Engine `translate.py`), `YANGILASH.bat` va `ORQAGA-QAYTARISH.bat`. Modellar, runtime, MOGRT tegilmaydi; eski fayllar `Hujjatlar\OgoCaption\update-backup\<sana-vaqt>\` ga zaxiralanadi. Skript o'rnatmadagi har faylning versiyasini SHA256 bo'yicha aytadi (15.10 paketi / allaqachon yangi / qo'lda o'zgartirilgan). `tools/test_update_win.sh` — 9 stsenariy (PowerShell 7.4 da, Linux'da; Windows PowerShell 5.1 da hali sinalmagan).
+
 ## Lochinning kompyuterida tekshirish kerak
 
 **Premiere'da (Windows, keyin Mac):**
