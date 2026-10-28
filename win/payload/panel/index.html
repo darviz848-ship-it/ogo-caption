@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ogo Caption AI</title>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Adobe CEP CSInterface library -->
+    <script src="js/CSInterface.js"></script>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    <div class="container">
+        <!-- Premium Header with Logo -->
+        <header>
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        <path d="M8 10h.01"></path>
+                        <path d="M12 10h.01"></path>
+                        <path d="M16 10h.01"></path>
+                    </svg>
+                </div>
+                <h1>Ogo Caption</h1>
+            </div>
+            <p class="subtitle">AI-powered transcription & automated captioning</p>
+        </header>
+
+        <main>
+            <!-- Card 1: Style Selection -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-icon">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="21" y1="9" x2="3" y2="9"></line>
+                            <line x1="21" y1="15" x2="3" y2="15"></line>
+                            <line x1="12" y1="3" x2="12" y2="21"></line>
+                        </svg>
+                    </div>
+                    <h3>Uslubni tanlang</h3>
+                </div>
+                
+                <div class="style-grid" id="styleGrid">
+                    <div class="style-card active" data-style="srt">
+                        <div class="style-preview flex-col">
+                            <span class="preview-text-std">ODDIY (SRT)</span>
+                            <span class="preview-sub">Oq va toza</span>
+                        </div>
+                        <div class="style-name">Standart yozuv</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Card 2: Voice Settings -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-icon">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.5 1z"></path>
+                        </svg>
+                    </div>
+                    <h3>Ovozni aniqlash sozlamalari</h3>
+                </div>
+
+                <!-- Language Selection -->
+                <div class="form-group">
+                    <label for="languageSelect">
+                        <span>Til:</span>
+                    </label>
+                    <div class="select-wrapper">
+                        <select id="languageSelect">
+                            <option value="uz" selected>O'zbek tili (Uzbek)</option>
+                            <option value="auto">Avtomatik aniqlash (Auto)</option>
+                            <option value="en">Ingliz tili (English)</option>
+                            <option value="ru">Rus tili (Russian)</option>
+                        </select>
+                        <div class="select-arrow">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Words per line -->
+                <div class="form-group">
+                    <div class="slider-header">
+                        <label for="wordsPerLine">Bitta qatorda nechta so'z?</label>
+                        <span id="wordsPerLineVal" class="slider-badge">3 so'z</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="wordsPerLine" min="1" max="5" value="3">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Translation -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-icon">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </div>
+                    <h3>Tarjima (internetsiz)</h3>
+                </div>
+
+                <div class="form-group">
+                    <label for="translateSelect">
+                        <span>Qaysi tilga:</span>
+                    </label>
+                    <div class="select-wrapper">
+                        <select id="translateSelect">
+                            <option value="" selected>Tarjima qilinmasin</option>
+                            <option value="ru">Rus tiliga (Русский)</option>
+                            <option value="en">Ingliz tiliga (English)</option>
+                            <option value="uz">O'zbek tiliga (lotin)</option>
+                        </select>
+                        <div class="select-arrow">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="form-hint">Caption yaratilganda asl va tarjima SRT ikkalasi ham loyihaga qo'shiladi.</p>
+                </div>
+
+                <button id="translateSrtBtn" class="secondary-btn">📄 Tayyor SRT faylni tarjima qilish</button>
+            </div>
+
+            <!-- Action Button -->
+            <button id="generateBtn" class="primary-btn">
+                <span class="btn-glow-container"></span>
+                <span class="btn-content">
+                    <svg class="btn-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                    <span class="btn-text">✨ Caption Yaratish</span>
+                    <span class="loader hidden"></span>
+                </span>
+            </button>
+
+            <!-- Status Alerts Container -->
+            <div id="statusMessage" class="status-message hidden">
+                <div class="status-content-row">
+                    <div class="status-icon-container animate-pulse">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="2" x2="12" y2="6"></line>
+                            <line x1="12" y1="18" x2="12" y2="22"></line>
+                            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                            <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                            <line x1="2" y1="12" x2="6" y2="12"></line>
+                            <line x1="18" y1="12" x2="22" y2="12"></line>
+                            <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                            <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                        </svg>
+                    </div>
+                    <span class="status-text">Jarayon ketmoqda... Iltimos kuting.</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

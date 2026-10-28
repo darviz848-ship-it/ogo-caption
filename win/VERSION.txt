@@ -1,0 +1,97 @@
+OgoCaption ko'chma paket
+========================
+Yig'ilgan sana : 2026-08-19
+Yangilangan    : 2026-10-15 (oflayn tarjima)
+Yig'ilgan joy  : Lochinbek ish kompyuteri (Windows 11)
+Manba          : %APPDATA%\Adobe\CEP\extensions\OgoCaption
+                 %USERPROFILE%\Documents\OgoCaption
+
+Tarkib
+------
+Panel (CEP)        : com.uzcaption.panel v1.0.0
+Python runtime     : 3.14.4 (embeddable, portativ, runtime.zip ichida)
+faster-whisper     : 1.2.1
+ctranslate2        : 4.8.1
+tokenizers         : 0.23.1
+huggingface_hub    : 1.28.0 (faqat tarjima modelini yuklash uchun)
+onnxruntime        : 1.29.0
+uzbek_model        : ~1.5 GB, int8, lotin o'zbek (multilingual whisper)
+multi_model        : ~483 MB, int8, ru / en / auto
+VAD                : silero_vad_v6 (paket ichida)
+translate_model    : PAKETDA YO'Q (2.95 GB) - alohida o'rnatiladi:
+                     MADLAD-400-3B-MT, CTranslate2 int8, Apache 2.0
+                     HF: Nextcloud-AI/madlad400-3b-mt-ct2-int8
+                         revision aa32bbdeba7880eff2096ec044cb155a340a9400
+                     model.bin SHA256 77b9fd9ab97c1259d07089b5f854393d
+                                      ad81bc5fb5647d3f9a5d101c94f40daa
+
+2026-10-15 yangilanish: oflayn tarjima
+--------------------------------------
+Manba - Lochinning o'z o'rnatmasidagi sinalgan versiya (15.10.2026).
+1. Panel: "Tarjima (internetsiz)" kartasi (index.html, style.css -
+   manbadagi bilan aynan bir xil).
+2. main.js: tarjima qismi paketdagi main.js ga qo'shildi (manbadagi
+   runEngine / runTranslate / buildSrt / wordsToBlocks / mergeWords /
+   writeAndImportSrt refaktori), Python esa avvalgidek
+   resolvePythonExe() orqali topiladi - manbadagi qotib qolgan
+   C:\Users\lochin\...\Python314 yo'li paketga O'TMAGAN.
+   Tarjimasiz SRT natijasi avvalgisi bilan baytma-bayt bir xil.
+3. main.js: SRT import yo'li endi JSON.stringify bilan uzatiladi -
+   loyiha papkasi nomida ' bo'lsa (masalan "O'zbek loyiha") SRT
+   import bo'lmaslik xatosi Windows paketida ham tuzatildi.
+4. main.js: tarjima tanlangan, lekin model o'rnatilmagan bo'lsa -
+   audio eksport qilinmasdan darhol tushunarli xabar
+   (tools\INSTALL-TRANSLATE-MODEL.bat ni ko'rsatadi).
+5. Engine: translate.py qo'shildi; transcribe.py JSON'ga "language"
+   qo'shildi ("auto" rejimda tarjima uchun asl tilni bilish kerak).
+6. Engine\get_translate_model.py: modelni lokal nusxadan
+   (translate_model papkasi paket ichida yoki yonida) yoki
+   HuggingFace'dan o'rnatadi; hajm + SHA256 tekshiruvi, avval
+   translate_model.part ga yoziladi, uzilgan yuklash davom etadi.
+7. install.ps1: oxirida ixtiyoriy tarjima modeli qadami (xato
+   o'rnatishni to'xtatmaydi); enjin skriptlari tekshiruvi;
+   tokenizers importi tekshiriladi.
+8. tools: INSTALL-TRANSLATE-MODEL.bat (translate-model.ps1);
+   TEST-ENGINE ga 7-band - haqiqiy tarjima sinovi
+   ("Salom, bugun havo juda yaxshi." -> en).
+
+Original paketdan farqi (2026-08-19)
+------------------------------------
+1. main.js dagi qotib qolgan Python yo'li olib tashlandi.
+   Endi resolvePythonExe() ishlatiladi:
+     python-path.txt -> portativ runtime -> tizimdagi Python
+2. hostscript.jsx: Waveform Audio preseti endi ishlab turgan
+   Premiere papkasidan (Folder.startup) va ProgramFiles dan
+   qidiriladi, 2022-2028 yillar. Avval faqat C:\Program Files
+   va 2024/2025/2026 tekshirilardi.
+3. uzbek_model ichiga tokenizer.json qo'shildi. Avval u
+   HuggingFace'dan yuklanardi - ya'ni birinchi ishga tushirish
+   uchun internet kerak edi. Endi to'liq offline.
+4. Portativ Python 3.14 + faster-whisper paketga qo'shildi -
+   target kompyuterda Python o'rnatish shart emas.
+
+Sinovdan o'tgan
+---------------
+2026-08-19:
+- Portativ Python import testi (faster_whisper, ctranslate2, numpy, av, onnxruntime)
+- Haqiqiy transkripsiya: uz va ru, HF_HUB_OFFLINE=1 va bo'sh HF keshi bilan
+- install.ps1 to'liq o'rnatish sinovi (sandbox papkaga)
+- main.js va CSInterface.js sintaksis tekshiruvi (node --check)
+2026-10-15 (tarjima):
+- install.ps1 -TestRoot: sandbox papkaga to'liq o'rnatish
+- get_translate_model.py: lokal nusxadan (nusxa + SHA256), HuggingFace'dan
+  haqiqiy yuklash (2 daq 41 s, SHA256 mos), buzilgan nusxa rad etildi,
+  qayta ishga tushirishda "allaqachon o'rnatilgan"
+- translate-model.ps1: o'rnatma yo'q / model bor / manba yo'q / "keyinroq"
+- Portativ runtime'da enjin: transcribe.py (auto -> "language": "ru")
+  + translate.py words rejimi (ru -> en) va srt rejimi (uz -> ru,
+  inglizcha orqali): "Assalomu alaykum, bugun sizlarga yangi
+  loyihamiz haqida gapirib beraman." -> "Zdravstvuyte, segodnya ya
+  rasskazhu vam o nashem novom proekte." (kirillda); xotira
+  cho'qqisi 5.24 GB
+- test-engine.ps1 -TestRoot: 7 band, hammasi OK
+- main.js: soxta CEP muhitida 8 stsenariy (tools/ogocaption-mac/test_mainjs.js win)
+
+Premiere'ning o'zida sinalmagan (paket versiyasi). Manbadagi panel
+Lochinning Premiere'sida sinalgan; paketdagi farq - faqat Python
+topish yo'li.

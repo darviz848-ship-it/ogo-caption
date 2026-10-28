@@ -1,0 +1,124 @@
+OgoCaption macOS paketi
+=======================
+Yig'ilgan sana : 2026-09-25
+Yangilangan    : 2026-10-15 (oflayn tarjima)
+Yig'ilgan joy  : Lochinbek ish kompyuteri (Windows 11), Mac'da ishlatish uchun
+Asos           : OgoCaption-Setup (Windows paketi, 2026-08-19)
+
+Tarkib
+------
+Panel (CEP)        : com.uzcaption.panel v1.0.0 - universal (Windows + Mac)
+Python runtime     : CPython 3.13.15, python-build-standalone 20260901
+                     (install_only_stripped, portativ, runtime-<arch>.tar.gz)
+                     arm64  : Apple Silicon, macOS 11+
+                     x86_64 : Intel, macOS 11+
+faster-whisper     : 1.2.1
+ctranslate2        : 4.8.2  (arm64: Accelerate + Ruy int8; Intel: MKL + oneDNN)
+av (PyAV)          : 14.1.0 (arm64), 18.1.0 (Intel)
+numpy              : 2.5.3
+tokenizers         : 0.23.2
+huggingface_hub    : 1.33.0
+onnxruntime        : YO'Q - faqat VAD filtri uchun kerak, transcribe.py VAD
+                     ishlatmaydi; qo'shilsa minimal macOS 14 ga ko'tarilardi
+uzbek_model        : ~1.5 GB, int8, lotin o'zbek (Windows paketi bilan bir xil)
+multi_model        : ~483 MB, int8, ru / en / auto (Windows paketi bilan bir xil)
+hf_xet             : 1.6.0 (faqat tarjima modelini yuklash uchun)
+translate_model    : PAKETDA YO'Q (2.95 GB) - alohida o'rnatiladi:
+                     MADLAD-400-3B-MT, CTranslate2 int8, Apache 2.0
+                     HF: Nextcloud-AI/madlad400-3b-mt-ct2-int8
+                         revision aa32bbdeba7880eff2096ec044cb155a340a9400
+                     model.bin SHA256 77b9fd9ab97c1259d07089b5f854393d
+                                      ad81bc5fb5647d3f9a5d101c94f40daa
+                     Windows paketidagi bilan aynan bir xil fayllar.
+
+2026-10-15 yangilanish: oflayn tarjima
+--------------------------------------
+Manba - Lochinning Windows o'rnatmasidagi sinalgan versiya (15.10.2026).
+1. Panel: "Tarjima (internetsiz)" kartasi (index.html, style.css -
+   manbadagi bilan aynan bir xil).
+2. main.js: tarjima qismi universal panelga qo'shildi (runEngine /
+   runTranslate / buildSrt / wordsToBlocks / mergeWords refaktori).
+   Mac'ning hamma xususiyatlari saqlangan: Application Support papka,
+   resolvePythonExe(), shell'siz spawn + PYTHONIOENCODING, EACCES /
+   SIGKILL maslahati, exportAudioToTemp(JSON yo'l), loyiha papkasiga
+   yozib bo'lmasa temp ga yozish (endi tarjima SRT uchun ham).
+   Tarjimasiz SRT natijasi avvalgisi bilan baytma-bayt bir xil.
+3. main.js: tarjima tanlangan, lekin model o'rnatilmagan bo'lsa -
+   audio eksport qilinmasdan darhol tushunarli xabar
+   (tools/INSTALL-TRANSLATE-MODEL.command ni ko'rsatadi).
+4. Engine: translate.py qo'shildi; transcribe.py JSON'ga "language"
+   qo'shildi ("auto" rejimda tarjima uchun asl tilni bilish kerak).
+5. Engine/get_translate_model.py: modelni lokal nusxadan
+   (translate_model papkasi paket ichida yoki yonida) yoki
+   HuggingFace'dan o'rnatadi; hajm + SHA256 tekshiruvi, avval
+   translate_model.part ga yoziladi, uzilgan yuklash davom etadi.
+   Windows paketidagi bilan aynan bir xil fayl.
+6. install.sh: oxirida ixtiyoriy tarjima modeli qadami (xato
+   o'rnatishni to'xtatmaydi); enjin skriptlari tekshiruvi.
+7. tools: INSTALL-TRANSLATE-MODEL.command (translate-model.sh);
+   TEST-ENGINE ga 8-band - haqiqiy tarjima sinovi
+   ("Salom, bugun havo juda yaxshi." -> en).
+
+Windows paketidan farqi
+-----------------------
+1. main.js - Mac tarmog'i qayta yozildi:
+   - plagin papkasi ~/Library/Application Support/OgoCaption
+     (Documents emas - iCloud sinxronizatsiyasi 2 GB modelni bulutga
+      yuklamasin, macOS "Documents'ga ruxsat" so'ramasin)
+   - Python: python-path.txt -> runtime/bin/python3 -> Homebrew ->
+     python.org. Avval tizimdagi "python3" + qo'lda o'rnatilgan
+     faster-whisper kerak edi.
+   - Python shell'siz, argumentlar massivi bilan chaqiriladi
+     (bo'sh joy / qo'shtirnoqli yo'llar xavfsiz)
+   - EACCES / SIGKILL (Gatekeeper bloki) uchun tushunarli xabar
+2. main.js - ikkala OS uchun: fayl yo'llari evalScript'ga JSON.stringify
+   bilan uzatiladi. Avval loyiha papkasi nomida ' bo'lsa (masalan
+   "O'zbek loyiha") SRT import qilinmasdi. (2026-10-15 dan Windows
+   paketida ham SRT importi shunday tuzatilgan.)
+3. main.js - loyiha papkasiga yozib bo'lmasa SRT temp papkaga yoziladi.
+4. hostscript.jsx - Mac'da "Waveform Audio 48kHz 16-bit" preseti:
+   ishlab turgan Premiere .app ichidan, /Applications/Adobe Premiere Pro
+   2022-2028 dan, /Applications dagi boshqa "Adobe Premiere Pro*"
+   papkalardan (Beta), oxirida paketdagi zaxira nusxadan qidiriladi.
+   Avval faqat 2024 va 2025 tekshirilardi.
+5. hostscript.jsx - audio eksport bo'lmasa aniq xato qaytaradi.
+6. O'rnatuvchi macOS karantin belgisini (com.apple.quarantine)
+   olib tashlaydi va oxirida haqiqiy AI sinovini o'tkazadi.
+   transcribe.py va modellar Windows paketi bilan aynan bir xil.
+
+Sinovdan o'tgan (Windows'da, Mac'siz)
+-------------------------------------
+- Ikkala runtime ichidagi barcha Mach-O fayllar statik tahlil qilindi
+  (arm64: 119, Intel: 107): arxitektura to'g'ri, har bir dylib
+  bog'liqligi paket ichida yoki macOS tizim kutubxonasida topiladi,
+  arm64 binarlarning hammasi imzolangan, minimal macOS 11.0
+- ctranslate2 arm64 build'ida Ruy (int8 backend) borligi tekshirildi
+- python-build-standalone arxivlari SHA256SUMS bilan tekshirildi
+- hostscript.jsx: soxta ExtendScript muhitida 7 ta stsenariy
+  (Mac: .app ichidan / odatiy yo'l / Beta / zaxira preset / topilmadi;
+   Windows: eski xatti-harakat; apostrofli yo'l) + ES3 tekshiruvi
+- main.js: soxta CEP muhitida end-to-end 6 ta stsenariy (Mac va Windows)
+- install.sh: bash -n, sinov papkasiga to'liq o'rnatish + qayta
+  o'rnatish (zaxira, runtime almashinuvi, model hajmi tekshiruvi)
+- Model fayllari Windows paketidagi asl nusxa bilan SHA256 bo'yicha bir xil
+
+2026-10-15 (tarjima, Windows'da):
+- Ikkala runtime'da ctranslate2 4.8.2, tokenizers 0.23.2, huggingface_hub
+  1.33.0, hf_xet 1.6.0, certifi bor (tar ro'yxati bo'yicha)
+- main.js: soxta CEP muhitida 10 stsenariy (tools/ogocaption-mac/
+  test_mainjs.js mac): tarjimasiz SRT baytma-bayt o'zgarmagan, uz->ru
+  2 ta SRT, loyiha papkasiga yozib bo'lmasa temp, model yo'q, auto til,
+  SIGKILL, tayyor SRT tarjimasi, Windows rejimi
+- install.sh --test-root (Git Bash): o'rnatish + tarjima modeli qadami
+  (OGO_TEST_PY bilan Windows Python'da)
+- translate-model.sh: o'rnatma yo'q / lokal nusxadan o'rnatish /
+  qayta ishga tushirish
+- test-engine.sh 8-band: translate.py Windows portativ Python'ida
+  ishladi ("Hello, it's very nice today.")
+- get_translate_model.py va translate.py Windows paketidagi bilan bir
+  xil - u yerda HuggingFace'dan haqiqiy yuklash va enjin sinovi o'tgan
+
+Mac'ning o'zida sinalmagan: Python'ni haqiqiy ishga tushirish va
+Premiere'dagi panel; tarjima tezligi va xotira (Windows'da ~5.3 GB).
+O'rnatuvchining oxiridagi AI sinovi va tools/TEST-ENGINE.command
+aynan shuni Mac'da tekshiradi.

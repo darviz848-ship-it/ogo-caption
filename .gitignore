@@ -1,0 +1,14 @@
+# Modellar va runtime repoga kirmaydi (GitHub 100 MB chegarasi)
+model.bin
+translate_model/
+translate_model.part/
+runtime*.zip
+runtime-*.tar.gz
+dl/
+
+# Sinov natijalari va kesh
+__pycache__/
+*.pyc
+bench/data/
+bench/models/
+bench/out/
