@@ -215,6 +215,56 @@ function wordsToBlocks(mergedWords, wordsPerLine) {
     return blocks;
 }
 
+// ---------------------------------------------------------------------------
+// Yangi o'zbek alifbosi (2021-yil loyihasi): oʻ -> ó, gʻ -> ǵ, sh -> ş, ch -> ç
+// (Oʻ -> Ó, Gʻ -> Ǵ, Sh/SH -> Ş, Ch/CH -> Ç). ng va tutuq belgisi o'zgarmaydi.
+// o/g dan keyingi apostrof (' ʻ ‘ ’ ` ʼ ´) - oʻ/gʻ belgisi; boshqa harfdan keyingisi -
+// tutuq (ma'no, san'at). Is'hoq, as'hob - s va h orasida tutuq bor, ş bo'lmaydi.
+// Faqat o'zbekcha matnga va mergeWords dan keyin ("qo" + "'yaman" avval qo'shiladi).
+// ---------------------------------------------------------------------------
+const ALPHABET_STORAGE_KEY = "ogoCaption.alphabet";
+const UZ_APOSTROPHES = "'ʻ‘’`ʼ´";
+const NEW_ALPHABET_PAIRS = { o: "ó", O: "Ó", g: "ǵ", G: "Ǵ", s: "ş", S: "Ş", c: "ç", C: "Ç" };
+
+function toNewAlphabet(text) {
+    let out = "";
+    for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        const next = i + 1 < text.length ? text[i + 1] : "";
+        if ((c === "o" || c === "O" || c === "g" || c === "G") && next && UZ_APOSTROPHES.indexOf(next) >= 0) {
+            out += NEW_ALPHABET_PAIRS[c];
+            i++;
+        } else if ((c === "s" || c === "S" || c === "c" || c === "C") && (next === "h" || next === "H")) {
+            out += NEW_ALPHABET_PAIRS[c];
+            i++;
+        } else {
+            out += c;
+        }
+    }
+    return out;
+}
+
+// O'zbekcha SRT bloklariga tanlangan alifboni qo'llaydi. Joriy alifboda bloklar
+// o'zi qaytadi - natija avvalgisi bilan baytma-bayt bir xil.
+function applyUzAlphabet(blocks, alphabet) {
+    if (alphabet !== "new") return blocks;
+    return blocks.map(b => Object.assign({}, b, { text: toNewAlphabet(b.text) }));
+}
+
+function loadAlphabet() {
+    try {
+        return window.localStorage.getItem(ALPHABET_STORAGE_KEY) === "new" ? "new" : "current";
+    } catch (e) {
+        return "current";
+    }
+}
+
+function saveAlphabet(value) {
+    try {
+        window.localStorage.setItem(ALPHABET_STORAGE_KEY, value === "new" ? "new" : "current");
+    } catch (e) {}
+}
+
 function evalScriptAsync(script) {
     return new Promise(resolve => csInterface.evalScript(script, resolve));
 }
@@ -265,6 +315,16 @@ function setupUI() {
     const translateSelect = document.getElementById('translateSelect');
     const translateSrtBtn = document.getElementById('translateSrtBtn');
     const translateSrtLabel = translateSrtBtn.textContent;
+
+    // Alifbo: joriy / yangi - oxirgi tanlov eslab qolinadi (default - joriy)
+    const alphabetSelect = document.getElementById('alphabetSelect');
+    if (alphabetSelect) {
+        alphabetSelect.value = loadAlphabet();
+        alphabetSelect.addEventListener('change', function() {
+            saveAlphabet(this.value);
+        });
+    }
+    const getAlphabet = () => (alphabetSelect && alphabetSelect.value === "new") ? "new" : "current";
 
     // Premium status alerts helper (Now with real-time percentage progress bar!)
     function updateStatus(text, type = 'info', percent = null) {
@@ -366,9 +426,15 @@ function setupUI() {
                 // 3. SRT orqali kiritish (Eng tez va ishonchli)
                 const wordsPerLine = parseInt(wordsSlider.value) || 1;
                 const mergedWords = mergeWords(data.words);
+                const alphabet = getAlphabet();
+                // Yangi alifbo faqat o'zbekcha SRT ga. Tarjimaga joriy yozuvdagi so'zlar ketadi -
+                // MADLAD shu yozuvni biladi.
+                const isUzbek = lang === "uz" || (lang === "auto" && data.language === "uz");
+                let blocks = wordsToBlocks(mergedWords, wordsPerLine);
+                if (isUzbek) blocks = applyUzAlphabet(blocks, alphabet);
                 const srtDir = await getSrtDir();
                 await writeAndImportSrt(path.join(srtDir, cleanSeqName + "_captions.srt"),
-                    buildSrt(wordsToBlocks(mergedWords, wordsPerLine)));
+                    buildSrt(blocks));
 
                 let doneMsg = data.words.length + " ta so'z (SRT) kiritildi!";
 
@@ -384,7 +450,7 @@ function setupUI() {
                             { mode: "words", words: mergedWords, source: sourceLang, target: target, words_per_line: wordsPerLine },
                             translateProgress);
                         await writeAndImportSrt(path.join(srtDir, `${cleanSeqName}_captions_${target}.srt`),
-                            buildSrt(tr.blocks));
+                            buildSrt(target === "uz" ? applyUzAlphabet(tr.blocks, alphabet) : tr.blocks));
                         doneMsg = `${data.words.length} ta so'z + ${TRANSLATE_LANG_NAMES[target]} tiliga tarjima (2 ta SRT) kiritildi!`;
                     }
                 }
@@ -428,7 +494,8 @@ function setupUI() {
                 { mode: "srt", srt_path: srcPath, target: target, words_per_line: wordsPerLine },
                 translateProgress);
             const outPath = srcPath.replace(/\.srt$/i, "") + "_" + target + ".srt";
-            await writeAndImportSrt(outPath, buildSrt(tr.blocks));
+            await writeAndImportSrt(outPath,
+                buildSrt(target === "uz" ? applyUzAlphabet(tr.blocks, getAlphabet()) : tr.blocks));
             updateStatus(`${tr.sentences} ta gap ${TRANSLATE_LANG_NAMES[target]} tiliga tarjima qilindi: ${path.basename(outPath)}`, "success");
             resetBtn();
         } catch (err) {
