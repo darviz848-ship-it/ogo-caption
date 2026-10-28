@@ -76,6 +76,33 @@ def clean_uzbek(text):
     return re.sub(u"[‘’ʻʼ`´]", "'", text)
 
 
+# Yangi alifbo (2021 loyihasi: ó ǵ ş ç) dagi o'zbekcha matn MADLAD'ga joriy yozuvda beriladi -
+# model shu yozuvni biladi. Joriy alifbodagi matn o'zgarmaydi.
+_NEW_TO_CURRENT = {u"ó": u"o'", u"Ó": u"O'", u"ǵ": u"g'", u"Ǵ": u"G'", u"ş": u"sh", u"ç": u"ch"}
+_NEW_LETTERS = re.compile(u"[óÓǵǴşŞçÇ]")
+_CURRENT_MARKS = re.compile(u"[sScC][hH]|[oOgG]['‘’ʻʼ`´]")
+
+
+def is_new_alphabet(texts):
+    """Yangi alifbo: ó ǵ ş ç bor, joriy yozuvdagi sh / ch / oʻ / gʻ esa butun matnda yo'q."""
+    s = " ".join(texts)
+    return _NEW_LETTERS.search(s) is not None and _CURRENT_MARKS.search(s) is None
+
+
+def from_new_alphabet(text):
+    res = []
+    for i, char in enumerate(text):
+        if char in (u"Ş", u"Ç"):
+            nxt = text[i + 1] if i + 1 < len(text) else ''
+            prev = text[i - 1] if i > 0 else ''
+            # "ŞAHAR" -> "SHAHAR", "Şahar" -> "Shahar", "TOŞ" -> "TOSH"
+            upper = nxt.isupper() or (not nxt.isalpha() and prev.isupper())
+            res.append((u"S" if char == u"Ş" else u"C") + (u"H" if upper else u"h"))
+        else:
+            res.append(_NEW_TO_CURRENT.get(char, char))
+    return "".join(res)
+
+
 # ---------------- Kirishni o'qish ----------------
 
 def _parse_srt_time(t):
@@ -285,7 +312,10 @@ def main(cfg_path):
         t = re.sub(u"\\s+([.,!?:;…%])", r"\1", " ".join(u["text"] for u in s))
         texts.append(t[:1].upper() + t[1:])   # ASR kichik harf beradi — gap boshi katta bo'lsa nomlar yaxshiroq tarjima bo'ladi
 
-    source = cfg.get("source") or detect_language(texts)
+    current = [from_new_alphabet(t) for t in texts] if is_new_alphabet(texts) else texts
+    source = cfg.get("source") or detect_language(current)
+    if source == "uz":
+        texts = current
     if source == target:
         raise RuntimeError("Matn allaqachon shu tilda (%s)." % target)
     print("PROGRESS:2", flush=True)

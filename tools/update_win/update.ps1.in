@@ -1,0 +1,178 @@
+# =============================================================
+#  OgoCaption - yangilash paketi (@@DATE@@)
+#  Faqat o'zgargan fayllarni almashtiradi, eskisini zaxiraga oladi.
+#  Modellar, runtime, sozlamalar tegilmaydi. Admin huquqi shart emas.
+# =============================================================
+param(
+    [switch]$Restore,   # oxirgi zaxirani qaytarish (ORQAGA-QAYTARISH.bat)
+    [switch]$Force,     # savol bermasdan
+    [switch]$NoPause,   # oxirida "Enter bosing" so'ramaydi
+    [string]$TestRoot = ""  # ichki: sinov uchun boshqa papka
+)
+
+$ErrorActionPreference = "Stop"
+
+function Say($msg, $color = "Gray") { Write-Host $msg -ForegroundColor $color }
+function Head($msg) { Write-Host ""; Write-Host "  $msg" -ForegroundColor Cyan }
+function Ok($msg)   { Write-Host "  [OK]  $msg" -ForegroundColor Green }
+function Warn($msg) { Write-Host "  [!]   $msg" -ForegroundColor Yellow }
+function Done($code) {
+    Write-Host ""
+    if (-not $NoPause) { Read-Host "Yopish uchun Enter bosing" | Out-Null }
+    exit $code
+}
+function Die($msg) {
+    Write-Host ""
+    Write-Host "  [XATO] $msg" -ForegroundColor Red
+    Done 1
+}
+function Ask($msg) {
+    if ($Force) { return $true }
+    $a = Read-Host "  $msg (H/y)"
+    return -not ($a -eq "N" -or $a -eq "n" -or $a -eq "yo'q")
+}
+function Sha($p) { return (Get-FileHash -Algorithm SHA256 -LiteralPath $p).Hash.ToLower() }
+function J($a, $b) { return (Join-Path $a $b) }
+
+Write-Host ""
+Write-Host "  ===========================================================" -ForegroundColor Cyan
+Write-Host "    OgoCaption  ::  yangilash @@DATE@@" -ForegroundColor White
+Write-Host "    @@TITLE@@" -ForegroundColor DarkGray
+Write-Host "  ===========================================================" -ForegroundColor Cyan
+
+# ---------- Papkalar (install.ps1 bilan bir xil) ----------
+$root  = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$files = J $root "files"
+if ($TestRoot -ne "") {
+    $dest = J (J $TestRoot "Documents") "OgoCaption"
+    $cep  = J (J (J (J (J $TestRoot "AppData") "Adobe") "CEP") "extensions") "OgoCaption"
+    Write-Host "  (SINOV REJIMI: $TestRoot)" -ForegroundColor Magenta
+} else {
+    $docs = [Environment]::GetFolderPath("MyDocuments")
+    if (-not $docs -or -not $env:APPDATA) { Die "Hujjatlar yoki APPDATA papkasi topilmadi." }
+    $dest = J $docs "OgoCaption"
+    $cep  = J (J (J (J $env:APPDATA "Adobe") "CEP") "extensions") "OgoCaption"
+}
+$bakRoot = J $dest "update-backup"
+
+# Fayllar: paketdagi joyi, o'rnatmadagi joyi, eski (oldingi paket) va yangi SHA256
+$items = @(
+@@ITEMS@@
+)
+
+Head "O'rnatma"
+Say  "    Panel   : $cep"
+Say  "    Enjin   : $dest"
+if (-not (Test-Path -LiteralPath (J $cep "index.html"))) {
+    Die "Panel topilmadi: $cep`n         Avval to'liq paketni (OgoCaption-Setup\INSTALL.bat) o'rnating."
+}
+if (-not (Test-Path -LiteralPath (J $dest "Engine"))) {
+    Die "Enjin papkasi topilmadi: $(J $dest 'Engine')`n         Avval to'liq paketni (OgoCaption-Setup\INSTALL.bat) o'rnating."
+}
+
+$ppro = Get-Process -Name "Adobe Premiere Pro" -ErrorAction SilentlyContinue
+if ($ppro) {
+    Warn "Premiere Pro ochiq. Avval uni yoping (o'zgarish Premiere qayta ochilganda ko'rinadi)."
+    if (-not (Ask "Premiere yopilgach davom etamizmi?")) { Die "Bekor qilindi." }
+}
+
+# =============================================================
+#  Orqaga qaytarish
+# =============================================================
+if ($Restore) {
+    Head "Zaxirani qaytarish"
+    $last = $null
+    if (Test-Path -LiteralPath $bakRoot) {
+        $last = Get-ChildItem -LiteralPath $bakRoot -Directory | Sort-Object Name -Descending | Select-Object -First 1
+    }
+    if (-not $last) { Die "Zaxira topilmadi: $bakRoot" }
+    Say "    Zaxira  : $($last.FullName)"
+    $absentFile = J $last.FullName "yangi-fayllar.txt"
+    $absent = @()
+    if (Test-Path -LiteralPath $absentFile) { $absent = @(Get-Content -LiteralPath $absentFile) }
+    if (-not (Ask "Shu zaxiradagi fayllar qaytarilsinmi?")) { Die "Bekor qilindi." }
+    foreach ($it in $items) {
+        $b = J $last.FullName $it.Rel
+        if (Test-Path -LiteralPath $b) {
+            Copy-Item -LiteralPath $b -Destination $it.Dst -Force
+            if ((Sha $it.Dst) -ne (Sha $b)) { Die "$($it.Name) qaytarilmadi." }
+            Ok "$($it.Name) qaytarildi"
+        } elseif ($absent -contains $it.Rel) {
+            if (Test-Path -LiteralPath $it.Dst) { Remove-Item -LiteralPath $it.Dst -Force }
+            Ok "$($it.Name) o'chirildi (yangilashdan oldin yo'q edi)"
+        }
+    }
+    Remove-Item -LiteralPath $last.FullName -Recurse -Force
+    Write-Host ""
+    Ok "Tayyor. Premiere Pro ni qayta oching."
+    Done 0
+}
+
+# =============================================================
+#  Yangilash
+# =============================================================
+Head "Fayllar holati"
+$todo = @()
+$unknown = 0
+foreach ($it in $items) {
+    $src = J $files $it.Rel
+    if (-not (Test-Path -LiteralPath $src)) { Die "Paket to'liq emas: $src topilmadi." }
+    if ((Sha $src) -ne $it.New) { Die "Paketdagi $($it.Name) buzilgan (SHA256 mos emas). Paketni qayta yuklab oling." }
+    if (-not (Test-Path -LiteralPath $it.Dst)) {
+        Say "    $($it.Name): yo'q - qo'shiladi"
+        $todo += $it
+        continue
+    }
+    $h = Sha $it.Dst
+    if ($h -eq $it.New) {
+        Say "    $($it.Name): allaqachon yangi" "DarkGray"
+    } elseif ($h -eq $it.Old) {
+        Say "    $($it.Name): oldingi versiya ($($it.OldLabel)) - yangilanadi"
+        $todo += $it
+    } else {
+        Warn "$($it.Name): BOSHQA versiya (qo'lda o'zgartirilgan yoki eski manba) - zaxiraga olib almashtiriladi"
+        $todo += $it
+        $unknown++
+    }
+}
+if ($todo.Count -eq 0) {
+    Write-Host ""
+    Ok "Hamma fayl allaqachon yangi - hech narsa qilinmadi."
+    Done 0
+}
+if ($unknown -gt 0) {
+    Warn "Kutilmagan versiya bor. Eski fayl zaxirada qoladi, ORQAGA-QAYTARISH.bat bilan qaytarsa bo'ladi."
+}
+Write-Host ""
+if (-not (Ask "Yangilaymizmi?")) { Die "Bekor qilindi." }
+
+$stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$bak = J $bakRoot $stamp
+New-Item -ItemType Directory -Path $bak -Force | Out-Null
+$absent = @()
+Head "Zaxira: $bak"
+foreach ($it in $todo) {
+    if (Test-Path -LiteralPath $it.Dst) {
+        $b = J $bak $it.Rel
+        New-Item -ItemType Directory -Path (Split-Path -Parent $b) -Force | Out-Null
+        Copy-Item -LiteralPath $it.Dst -Destination $b -Force
+        Ok "$($it.Name)"
+    } else {
+        $absent += $it.Rel
+    }
+}
+if ($absent.Count -gt 0) { Set-Content -LiteralPath (J $bak "yangi-fayllar.txt") -Value $absent }
+
+Head "Almashtirilmoqda"
+foreach ($it in $todo) {
+    New-Item -ItemType Directory -Path (Split-Path -Parent $it.Dst) -Force | Out-Null
+    Copy-Item -LiteralPath (J $files $it.Rel) -Destination $it.Dst -Force
+    if ((Sha $it.Dst) -ne $it.New) { Die "$($it.Name) yozilmadi (SHA256 mos emas). ORQAGA-QAYTARISH.bat ni ishga tushiring." }
+    Ok "$($it.Name)"
+}
+
+Write-Host ""
+Ok "Tayyor. Premiere Pro ni yopib qayta oching: Window -> Extensions -> ogo caption"
+Say "    Yangi: 'Ovozni aniqlash sozlamalari' kartasida 'Alifbo: joriy / yangi' tanlovi." "White"
+Say "    Qaytarish kerak bo'lsa: ORQAGA-QAYTARISH.bat" "DarkGray"
+Done 0

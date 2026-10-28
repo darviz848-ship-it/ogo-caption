@@ -58,6 +58,9 @@ ISHLATISH
      Birinchi marta model yuklanishi 20-40 soniya oladi.
   5. Tayyor SRT Project panelda paydo bo'ladi - timeline'ga tort.
      SRT fayl loyiha (.prproj) turgan papkaga ham yoziladi.
+  6. Alifbo: "Joriy" yoki "Yangi" (2021-yil loyihasi). Panel oxirgi
+     tanlovni eslab qoladi. Faqat o'zbekcha matnga ta'sir qiladi:
+     o'zbekcha subtitr va o'zbek tiliga tarjima.
 
 
 OFLAYN TARJIMA (ixtiyoriy)
