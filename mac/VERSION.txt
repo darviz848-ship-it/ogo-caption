@@ -2,6 +2,7 @@ OgoCaption macOS paketi
 =======================
 Yig'ilgan sana : 2026-09-25
 Yangilangan    : 2026-10-15 (oflayn tarjima)
+                 2026-10-28 (yangi alifbo tanlovi)
 Yig'ilgan joy  : Lochinbek ish kompyuteri (Windows 11), Mac'da ishlatish uchun
 Asos           : OgoCaption-Setup (Windows paketi, 2026-08-19)
 
@@ -30,6 +31,32 @@ translate_model    : PAKETDA YO'Q (2.95 GB) - alohida o'rnatiladi:
                      model.bin SHA256 77b9fd9ab97c1259d07089b5f854393d
                                       ad81bc5fb5647d3f9a5d101c94f40daa
                      Windows paketidagi bilan aynan bir xil fayllar.
+
+2026-10-28 yangilanish: yangi o'zbek alifbosi (Premiere'da hali sinalmagan)
+-------------------------------------------------------------------------
+Manba - cloud sessiya, alohida branch + PR. Asl uzbek_model va Premiere
+bilan Lochinning kompyuterida tekshiriladi (bench/REPORT.md).
+1. Panel: "Alifbo: joriy / yangi" tanlovi (index.html - ikkala paketda
+   bir xil). Yangi - 2021-yil loyihasi:
+     o' -> U+00F3 (o akut),  g' -> U+01F5 (g akut),
+     sh -> U+015F (s sedil), ch -> U+00E7 (c sedil), katta harflar ham.
+   Tanlov eslab qolinadi (localStorage), default - joriy.
+   Joriy rejimda natija avvalgisi bilan baytma-bayt bir xil.
+2. main.js: toNewAlphabet / applyUzAlphabet - o'zbekcha transkripsiya
+   SRT, ->uz tarjima va "Tayyor SRT ->uz" natijasiga, mergeWords dan
+   keyin. Is'hoq kabi tutuqli s+h o'zgarmaydi. Tarjimaga (MADLAD) joriy
+   yozuvdagi matn ketadi.
+3. Engine/translate.py: yangi alifbodagi tayyor SRT boshqa tilga tarjima
+   qilinsa, matn MADLAD'ga joriy yozuvda beriladi. Joriy alifbodagi matn
+   o'zgarmaydi (eski versiya bilan 300 ta tasodifiy kirishda bir xil).
+4. MOGRT shriftlari: bounce - Montserrat SemiBold (g akut bor),
+   fade va trend - Bebas Neue Regular (g akut / G akut YO'Q).
+5. tools: test_alphabet.js (57 holat), test_translate_alphabet.py,
+   alphabet_cases.json; test_mainjs.js ga 9 ta alifbo stsenariysi.
+   test_mainjs.js Linux/Mac'da ham to'g'ri ishlaydi (avval Windows
+   rejimi joriy papkada axlat fayl qoldirib, 2 ta testni yiqitardi).
+6. Runtime qayta yig'ilsa: PyAV 19+ faster-whisper 1.2.1 ni buzadi
+   (av.open metadata_errors) - av<19 qoldiring.
 
 2026-10-15 yangilanish: oflayn tarjima
 --------------------------------------
@@ -117,6 +144,18 @@ Sinovdan o'tgan (Windows'da, Mac'siz)
   ishladi ("Hello, it's very nice today.")
 - get_translate_model.py va translate.py Windows paketidagi bilan bir
   xil - u yerda HuggingFace'dan haqiqiy yuklash va enjin sinovi o'tgan
+
+2026-10-28 (yangi alifbo, Linux cloud muhitida - Premiere'siz):
+- tools/test_alphabet.js: konvertor 57 holat, win va mac main.js bir xil
+- tools/test_mainjs.js win / mac: eski stsenariylar + 9 ta alifbo
+  stsenariysi (default joriy, tanlov eslab qolinadi, uz->ru tarjimaga
+  joriy yozuv, ->uz tarjima va tayyor SRT ->uz yangi alifboda, auto,
+  localStorage taqiqlangan, eski index.html); joriy rejimda SRT
+  avvalgi main.js bilan bir xil
+- tools/test_translate_alphabet.py: translate.py 128 tekshiruv
+- translate.py eski va yangi versiyasi 300 ta tasodifiy joriy alifbo
+  kirishida (srt va words rejimi) bir xil JSON
+- tools/test_jsx.js mac hostscript.jsx - o'tdi (hostscript o'zgarmagan)
 
 Mac'ning o'zida sinalmagan: Python'ni haqiqiy ishga tushirish va
 Premiere'dagi panel; tarjima tezligi va xotira (Windows'da ~5.3 GB).

@@ -41,6 +41,11 @@ ISHLATISH
   3. Bir qatordagi so'z sonini sozla.
   4. Uslubni tanla: SRT yoki MOGRT (bounce / fade / trend).
   5. Tugmani bos. Birinchi marta model yuklanishi 20-40 soniya oladi.
+  6. Alifbo: "Joriy" yoki "Yangi" (2021-yil loyihasi). Panel oxirgi
+     tanlovni eslab qoladi. Faqat o'zbekcha matnga ta'sir qiladi:
+     o'zbekcha subtitr va o'zbek tiliga tarjima. Fade / trend MOGRT
+     shriftida (Bebas Neue) yangi g harfi (g akut) yo'q - Montserrat
+     (bounce) yoki boshqa shrift tanlang.
 
 
 OFLAYN TARJIMA (ixtiyoriy)
